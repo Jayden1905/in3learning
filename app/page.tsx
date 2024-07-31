@@ -1,52 +1,45 @@
-"use client";
+import outputs from '@/amplify_outputs.json'
+import Container from '@/components/layout/container'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { DefaultStorageManager } from '@/components/upload/storageManager'
+import { client } from '@/utils'
+import { createTodo, deleteTodo } from '@/utils/actions'
+import { Amplify } from 'aws-amplify'
 
-import { useState, useEffect } from "react";
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "@/amplify/data/resource";
-import "./../app/app.css";
-import { Amplify } from "aws-amplify";
-import outputs from "@/amplify_outputs.json";
-import "@aws-amplify/ui-react/styles.css";
+Amplify.configure(outputs)
 
-Amplify.configure(outputs);
-
-const client = generateClient<Schema>();
-
-export default function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-
-  function listTodos() {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
-  }
-
-  useEffect(() => {
-    listTodos();
-  }, []);
-
-  function createTodo() {
-    client.models.Todo.create({
-      content: window.prompt("Todo content"),
-    });
-  }
+export default async function App() {
+  const todos = await client.models.Todo.list()
 
   return (
-    <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/nextjs/start/quickstart/nextjs-app-router-client-components/">
-          Review next steps of this tutorial.
-        </a>
+    <Container className='grid place-items-center h-screen'>
+      <div className='flex flex-col gap-4'>
+        <h1 className='text-3xl font-sfpro font-bold'>My todos</h1>
+        <form action={createTodo}>
+          <Input type='text' name='content' className='mb-2' />
+          <Button variant={'primary'} size={'lg'} type='submit'>
+            Add todo
+          </Button>
+        </form>
+        <ul className='flex flex-col gap-4'>
+          {todos.data.map((todo) => (
+            <form
+              className='flex gap-2 tems-center'
+              action={deleteTodo.bind(null, todo.id)}
+              key={todo.id}
+            >
+              <li className='text-xl'>{todo.content}</li>
+              <Button variant={'primary'} size={'sm'} type='submit'>
+                Delete
+              </Button>
+            </form>
+          ))}
+        </ul>
+        <div>
+          <DefaultStorageManager />
+        </div>
       </div>
-    </main>
-  );
+    </Container>
+  )
 }
