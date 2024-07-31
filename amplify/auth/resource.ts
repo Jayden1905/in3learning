@@ -1,4 +1,5 @@
 import { defineAuth } from '@aws-amplify/backend'
+import { addUserToGroup } from '../data/addUserToGroup/resource'
 
 /**
  * Define and configure your auth resource
@@ -8,10 +9,7 @@ export const auth = defineAuth({
   loginWith: {
     email: true,
   },
-  userAttributes: {
-    'custom:role': {
-      dataType: 'String',
-      mutable: true,
-    },
-  },
+  groups: ['ADMINS', 'USERS'],
+
+  access: (allow) => [allow.resource(addUserToGroup).to(['addUserToGroup'])],
 })
